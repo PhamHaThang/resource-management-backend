@@ -1,5 +1,6 @@
 const Resource = require("../models/resource.model");
 const QRCode = require("qrcode");
+const { getPaginationAndFilter } = require("../utils/pagination");
 // [POST] /api/resources
 exports.createResource = async (req, res) => {
   const {
@@ -43,23 +44,22 @@ exports.createResource = async (req, res) => {
 // [GET] /api/resources
 exports.getAllResources = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = "", type, status } = req.query;
-    const query = { deleted: false };
+    const allowedFilters = ["name", "type", "status"];
 
-    if (search) {
-      query.name = { $regex: search, $options: "i" };
+    const { filter, page, limit, skip } = getPaginationAndFilter(
+      req.query,
+      allowedFilters
+    );
+    if (filter.name) {
+      filter.name = { $regex: filter.name, $options: "i" };
     }
-    if (type) {
-      query.type = type;
-    }
-    if (status) {
-      query.status = status;
-    }
-    const total = await Resource.countDocuments(query);
 
-    const resources = await Resource.find(query)
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit))
+    filter.deleted = false;
+    const total = await Resource.countDocuments(filter);
+
+    const resources = await Resource.find(filter)
+      .skip(skip)
+      .limit(limit)
       .sort({ createdAt: -1 });
     return res.status(200).json({
       success: true,
