@@ -40,7 +40,6 @@ exports.register = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(error);
     return res.status(500).json({
       success: false,
       message: "Lỗi server",
@@ -60,6 +59,7 @@ exports.login = async (req, res) => {
         error: "INVALID_EMAIL",
       });
     }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({
@@ -89,7 +89,6 @@ exports.login = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(error);
     return res.status(500).json({
       success: false,
       message: "Lỗi server",
