@@ -1,9 +1,32 @@
 const express = require("express");
-const router = express.Router();
 const issueReportController = require("../controllers/issueReport.controller");
+const { authenticateJWT, requireRoles } = require("../middlewares/auth");
+const router = express.Router();
 
-router.post("/", issueReportController.createIssueReport);
-router.get("/", issueReportController.getAllIssueReports);
-router.put("/:id/status", issueReportController.updateIssueStatus);
-
+router.use(authenticateJWT);
+router.post(
+  "/",
+  requireRoles("admin", "teacher", "student"),
+  issueReportController.createIssueReport
+);
+router.get(
+  "/",
+  requireRoles("admin", "teacher", "student"),
+  issueReportController.getAllIssueReports
+);
+router.get(
+  "/:id",
+  requireRoles("admin", "teacher", "student"),
+  issueReportController.getIssueReportDetail
+);
+router.put(
+  "/:id/status",
+  requireRoles("admin"),
+  issueReportController.updateIssueStatus
+);
+router.delete(
+  "/:id",
+  requireRoles("admin"),
+  issueReportController.deleteIssueReport
+);
 module.exports = router;

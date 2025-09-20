@@ -3,7 +3,8 @@ const IssueReport = require("../models/issueReport.model");
 // [POST] /api/issue-reports
 exports.createIssueReport = async (req, res) => {
   try {
-    const { userId, resourceId, title, description } = req.body;
+    const { resourceId, title, description } = req.body;
+    const userId = req.user._id;
     const newReport = new IssueReport({
       userId,
       resourceId,
@@ -27,12 +28,14 @@ exports.createIssueReport = async (req, res) => {
 // [GET] /api/issue-reports
 exports.getAllIssueReports = async (req, res) => {
   try {
-    const allowedFilters = ["userId", "resourceId", "status"];
+    const allowedFilters = ["resourceId", "status"];
     const { filter, page, limit, skip } = getPaginationAndFilter(
       req.query,
       allowedFilters
     );
-
+    if (req.user.role === "student") {
+      filter.userId = req.user._id;
+    }
     const total = await IssueReport.countDocuments(filter);
 
     const reports = await IssueReport.find(filter)
@@ -85,6 +88,67 @@ exports.updateIssueStatus = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Cập nhật trạng thái thành công",
+      data: report,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi hệ thống",
+      error: error.message,
+    });
+  }
+};
+// [DELETE] /api/issue-reports/:id
+exports.deleteIssueReport = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const report = await IssueReport.findByIdAndDelete(id);
+    if (!report)
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy báo cáo sự cố",
+        error: "NOT_FOUND",
+      });
+    return res.status(200).json({
+      success: true,
+      message: "Xóa báo cáo sự cố thành công",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi hệ thống",
+      error: error.message,
+    });
+  }
+};
+
+// [GET] /api/issue-reports/:id
+exports.getIssueReportDetail = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const report = await IssueReport.findById(id)
+      .populate("userId", "name email")
+      .populate("resourceId", "name type");
+
+    if (!report)
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy báo cáo sự cố",
+        error: "NOT_FOUND",
+      });
+    if (
+      req.user.role === "student" &&
+      !report.userId._id.equals(req.user._id)
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Không đủ quyền truy cập",
+        error: "FORBIDDEN",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Lấy chi tiết báo cáo sự cố thành công",
       data: report,
     });
   } catch (error) {

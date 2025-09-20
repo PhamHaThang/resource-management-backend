@@ -1,9 +1,10 @@
 const Booking = require("../models/booking.model");
 const { getPaginationAndFilter } = require("../utils/pagination");
-// [POST] /api/booking
+// [POST] /api/bookings
 exports.createBooking = async (req, res) => {
   try {
-    const { userId, resourceId, startTime, endTime, purpose } = req.body;
+    const { resourceId, startTime, endTime, purpose } = req.body;
+    const userId = req.user._id;
 
     if (new Date(startTime) >= new Date(endTime)) {
       return res.status(400).json({
@@ -33,7 +34,13 @@ exports.createBooking = async (req, res) => {
       });
     }
 
-    const booking = new Booking({ userId, resourceId, startTime, endTime });
+    const booking = new Booking({
+      userId,
+      resourceId,
+      startTime,
+      endTime,
+      purpose,
+    });
     await booking.save();
 
     return res.status(201).json({
@@ -49,35 +56,51 @@ exports.createBooking = async (req, res) => {
     });
   }
 };
-// [GET] /api/booking/user/:userId
-exports.getBookingsByUser = async (req, res) => {
+// [GET] /api/bookings/:id
+exports.getBookingDetail = async (req, res) => {
   try {
-    const { userId } = req.params;
-    const bookings = await Booking.find({ userId })
+    const booking = await Booking.findById(req.params.id)
       .populate("resourceId")
-      .sort({ startTime: -1 });
+      .populate("userId");
+    if (!booking)
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy booking",
+        error: "NOT_FOUND",
+      });
+
+    if (req.user.role === "student" && !booking.userId.equals(req.user._id)) {
+      return res.status(404).json({
+        success: false,
+        message: "Không đủ quyền truy cập booking này",
+        error: "NOT_FOUND",
+      });
+    }
     return res.status(200).json({
       success: true,
-      message: "Lấy lịch sử đặt phòng thành công",
-      data: bookings,
+      message: "Lấy thông tin chi tiết thành công",
+      data: booking,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: "Lỗi hệ thống",
+      message: "Lấy thông tin chi tiết thành công",
       error: error.message,
     });
   }
 };
-// [GET] /api/booking
+// [GET] /api/bookings
 exports.getAllBookings = async (req, res) => {
   try {
-    const allowedFilters = ["userId", "resourceId", "status"];
+    const allowedFilters = ["resourceId", "status"];
 
     const { filter, page, limit, skip } = getPaginationAndFilter(
       req.query,
       allowedFilters
     );
+    if (req.user.role === "student") {
+      filter.userId = req.user._id;
+    }
     const total = await Booking.countDocuments(filter);
     const bookings = await Booking.find(filter)
       .populate("resourceId")
@@ -103,7 +126,45 @@ exports.getAllBookings = async (req, res) => {
     });
   }
 };
-// [PIT] /api/booking/:id/status
+// [PUT] /api/bookings/:id
+exports.updateBooking = async (req, res) => {
+  try {
+    const updateData = { ...req.body };
+
+    if (updateData.status) {
+      const validStatuses = ["new", "approved", "rejected", "cancelled"];
+      if (!validStatuses.includes(updateData.status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Trạng thái không hợp lệ",
+          error: "INVALID_STATUS",
+        });
+      }
+    }
+
+    const booking = await Booking.findByIdAndUpdate(req.params.id, updateData, {
+      new: true,
+    });
+    if (!booking)
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy booking",
+        error: "NOT_FOUND",
+      });
+    return res.status(200).json({
+      success: true,
+      message: "Cập nhật booking thành công",
+      data: booking,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi hệ thống",
+      error: error.message,
+    });
+  }
+};
+// [PUT] /api/bookings/:id/status
 exports.updateBookingStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -137,6 +198,61 @@ exports.updateBookingStatus = async (req, res) => {
       success: true,
       message: "Cập nhật trạng thái thành công",
       data: booking,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi hệ thống",
+      error: error.message,
+    });
+  }
+};
+// [DELETE] /api/bookings/:id
+exports.deleteBooking = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const booking = await Booking.findByIdAndDelete(id);
+    if (!booking)
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy booking",
+        error: "NOT_FOUND",
+      });
+    return res.status(200).json({
+      success: true,
+      message: "Xóa booking thành công",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi hệ thống",
+      error: error.message,
+    });
+  }
+};
+// [PUT] /api/bookings/:id/cancel
+exports.cancelBookingByUser = async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+    if (!booking)
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy booking",
+        error: "NOT_FOUND",
+      });
+    if (!booking.userId.equals(req.user._id)) {
+      return res.status(403).json({
+        success: false,
+        message: "Không đủ quyền hủy booking này",
+        error: "FORBIDDEN",
+      });
+    }
+
+    booking.status = "cancelled";
+    await booking.save();
+    return res.status(200).json({
+      success: false,
+      message: "Booking đã được hủy",
     });
   } catch (error) {
     return res.status(500).json({

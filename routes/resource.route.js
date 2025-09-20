@@ -1,9 +1,28 @@
 const express = require("express");
 const resourceController = require("../controllers/resource.controller");
+const { authenticateJWT, requireRoles } = require("../middlewares/auth");
+
 const router = express.Router();
+// USER
 router.get("/", resourceController.getAllResources);
 router.get("/:id", resourceController.getResourceById);
-router.post("/", resourceController.createResource);
-router.put("/:id", resourceController.updateResource);
-router.delete("/:id", resourceController.deleteResource);
+// ADMIN
+router.post(
+  "/",
+  authenticateJWT,
+  requireRoles("admin"),
+  resourceController.createResource
+);
+router.put(
+  "/:id",
+  authenticateJWT,
+  requireRoles("admin"),
+  resourceController.updateResource
+);
+router.delete(
+  "/:id",
+  authenticateJWT,
+  requireRoles("admin"),
+  resourceController.deleteResource
+);
 module.exports = router;
