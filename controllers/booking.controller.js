@@ -1,4 +1,5 @@
 const Booking = require("../models/booking.model");
+const { createNotificationForUser } = require("../utils/notification");
 const { getPaginationAndFilter } = require("../utils/pagination");
 // [POST] /api/bookings
 exports.createBooking = async (req, res) => {
@@ -76,7 +77,7 @@ exports.getBookingDetail = async (req, res) => {
         error: "NOT_FOUND",
       });
     }
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Lấy thông tin chi tiết thành công",
       data: booking,
@@ -108,7 +109,7 @@ exports.getAllBookings = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .sort({ startTime: -1 });
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Lấy danh sách booking thành công",
       data: {
@@ -151,7 +152,7 @@ exports.updateBooking = async (req, res) => {
         message: "Không tìm thấy booking",
         error: "NOT_FOUND",
       });
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Cập nhật booking thành công",
       data: booking,
@@ -193,8 +194,14 @@ exports.updateBookingStatus = async (req, res) => {
         error: "NOT_FOUND",
       });
     }
-
-    return res.status(200).json({
+    await createNotificationForUser(
+      booking.userId._id,
+      "Trạng thái booking thay đổi",
+      `Booking của bạn đã chuyển sang trạng thái: ${status}`,
+      "booking",
+      booking._id
+    );
+    return res.json({
       success: true,
       message: "Cập nhật trạng thái thành công",
       data: booking,
@@ -218,7 +225,7 @@ exports.deleteBooking = async (req, res) => {
         message: "Không tìm thấy booking",
         error: "NOT_FOUND",
       });
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Xóa booking thành công",
     });
@@ -250,7 +257,7 @@ exports.cancelBookingByUser = async (req, res) => {
 
     booking.status = "cancelled";
     await booking.save();
-    return res.status(200).json({
+    return res.json({
       success: false,
       message: "Booking đã được hủy",
     });

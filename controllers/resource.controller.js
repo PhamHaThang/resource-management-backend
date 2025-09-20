@@ -61,7 +61,7 @@ exports.getAllResources = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Lấy danh sách tạo tài nguyên thành công",
       data: {
@@ -93,7 +93,7 @@ exports.getResourceById = async (req, res) => {
         error: "NOT_FOUND",
       });
     }
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Lấy chi tiêt tài nguyên thành công",
       data: resource,
@@ -122,7 +122,7 @@ exports.updateResource = async (req, res) => {
         error: "NOT_FOUND",
       });
     }
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Cập nhật tài nguyên thành công",
       data: updatedResource,
@@ -150,7 +150,7 @@ exports.deleteResource = async (req, res) => {
         error: "NOT_FOUND",
       });
     }
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Xóa tài nguyên thành công",
       data: deletedResource,

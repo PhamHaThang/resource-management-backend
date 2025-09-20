@@ -9,13 +9,13 @@ exports.getBookingStats = async (req, res) => {
         count: { $sum: 1 },
       },
     });
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Lấy thống kê booking theo trạng thái thành công",
       data: stats,
     });
   } catch (error) {
-    res
+    return res
       .status(500)
       .json({ success: false, message: "Lỗi hệ thống", error: error.message });
   }
@@ -67,7 +67,7 @@ exports.getBookingStatsByDate = async (req, res) => {
       },
       { $sort: { _id: 1 } },
     ]);
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Lấy thống kê booking theo ngày thành công",
       data: stats,

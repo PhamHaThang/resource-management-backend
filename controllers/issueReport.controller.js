@@ -44,7 +44,7 @@ exports.getAllIssueReports = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Lấy danh sách báo cáo thành công",
       data: {
@@ -85,7 +85,14 @@ exports.updateIssueStatus = async (req, res) => {
         message: "Không tìm thấy báo cáo sự cố",
         error: "NOT_FOUND",
       });
-    return res.status(200).json({
+    await createNotificationForUser(
+      issueReport.userId._id,
+      "Trạng thái báo cáo sự cố thay đổi",
+      `Báo cáo sự cố của bạn đã chuyển sang trạng thái: ${status}`,
+      "issueReport",
+      issueReport._id
+    );
+    return res.json({
       success: true,
       message: "Cập nhật trạng thái thành công",
       data: report,
@@ -109,7 +116,7 @@ exports.deleteIssueReport = async (req, res) => {
         message: "Không tìm thấy báo cáo sự cố",
         error: "NOT_FOUND",
       });
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Xóa báo cáo sự cố thành công",
     });
@@ -146,7 +153,7 @@ exports.getIssueReportDetail = async (req, res) => {
         error: "FORBIDDEN",
       });
     }
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Lấy chi tiết báo cáo sự cố thành công",
       data: report,

@@ -86,7 +86,7 @@ exports.login = async (req, res) => {
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: "12h",
     });
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Đăng nhập thành công",
       data: {
@@ -134,7 +134,7 @@ exports.forgotPassword = async (req, res) => {
 
     await sendEmail(email, "Đặt lại mật khẩu", html);
 
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Gửi email đặt lại mật khẩu thành công",
     });
@@ -167,7 +167,7 @@ exports.resetPassword = async (req, res) => {
     user.resetPasswordExpires = undefined;
     await user.save();
 
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Đổi mật khẩu thành công",
     });

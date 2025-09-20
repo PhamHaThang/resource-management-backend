@@ -17,7 +17,7 @@ exports.getAllUsers = async (req, res) => {
       .sort({
         createdAt: -1,
       });
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Lấy danh sách người dùng thành công",
       data: {
@@ -54,7 +54,7 @@ exports.updateUser = async (req, res) => {
         error: "NOT_FOUND",
       });
     }
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Cập nhật người dùng thành công",
       data: user,
@@ -92,7 +92,7 @@ exports.toggleUserStatus = async (req, res) => {
         error: "NOT_FOUND",
       });
     }
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: `Đã cập nhật trạng thái thành ${status}`,
       data: user,
@@ -115,7 +115,7 @@ exports.getProfile = async (req, res) => {
         message: "Không tìm thấy user",
         error: "NOT_FOUND",
       });
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Lấy thông tin cá nhân thành công",
       data: user,
@@ -142,7 +142,7 @@ exports.updateProfile = async (req, res) => {
         message: "Không tìm thấy user",
         error: "NOT_FOUND",
       });
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Cập nhật thành công",
       data: user,
@@ -186,7 +186,7 @@ exports.changePassword = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     user.passwordHash = await bcrypt.hash(newPassword, salt);
     await user.save();
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Đổi  mật khẩu thành công",
     });
