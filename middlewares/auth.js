@@ -3,7 +3,6 @@ const User = require("../models/user.model");
 
 exports.authenticateJWT = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-  console.log(authHeader);
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({
       success: false,
@@ -14,7 +13,6 @@ exports.authenticateJWT = async (req, res, next) => {
   const token = authHeader.split(" ")[1];
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    console.log(payload);
     const user = await User.findById(payload.userId);
     if (!user || user.status !== "active" || user.deleled) {
       return res.status(401).json({

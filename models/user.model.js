@@ -7,6 +7,9 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    avatar: {
+      type: String,
+    },
     email: {
       type: String,
       required: true,
@@ -43,7 +46,19 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        Object.keys(ret).forEach((key) => {
+          if (ret[key] == null || ret[key] === "") {
+            delete ret[key];
+          }
+        });
+        return ret;
+      },
+    },
+  }
 );
 
 module.exports = mongoose.model("User", userSchema);

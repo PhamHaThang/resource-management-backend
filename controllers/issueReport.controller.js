@@ -40,7 +40,11 @@ exports.getAllIssueReports = async (req, res) => {
 
     const reports = await IssueReport.find(filter)
       .populate("userId", "name email")
-      .populate("resourceId", "name type")
+      .populate({
+        path: "resourceId",
+        select: "name type",
+        populate: { path: "type", select: "name -_id" },
+      })
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
@@ -135,7 +139,11 @@ exports.getIssueReportDetail = async (req, res) => {
     const { id } = req.params;
     const report = await IssueReport.findById(id)
       .populate("userId", "name email")
-      .populate("resourceId", "name type");
+      .populate({
+        path: "resourceId",
+        select: "name type",
+        populate: { path: "type", select: "name -_id" },
+      });
 
     if (!report)
       return res.status(404).json({

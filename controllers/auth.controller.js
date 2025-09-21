@@ -7,8 +7,9 @@ require("dotenv").config();
 
 // [POST] /api/auth/register
 exports.register = async (req, res) => {
-  const { name, email, phone, password, studentCode, role } = req.body;
   try {
+    const { name, email, phone, password, studentCode, role } = req.body;
+    const avatar = req.file ? req.file.path : null;
     const existingUser = await User.findOne({
       email,
     });
@@ -37,20 +38,14 @@ exports.register = async (req, res) => {
       password: passwordHash,
       role,
       phone,
+      avatar,
       studentCode: role === "student" ? studentCode : "",
     });
     await newUser.save();
     return res.status(201).json({
       success: true,
       message: "Đăng ký thành công",
-      data: {
-        id: newUser._id,
-        name,
-        email,
-        role,
-        phone,
-        studentCode,
-      },
+      data: newUser,
     });
   } catch (error) {
     return res.status(500).json({

@@ -61,7 +61,10 @@ exports.createBooking = async (req, res) => {
 exports.getBookingDetail = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
-      .populate("resourceId")
+      .populate({
+        path: "resourceId",
+        populate: { path: "type", select: "name -_id" },
+      })
       .populate("userId");
     if (!booking)
       return res.status(404).json({
@@ -104,7 +107,10 @@ exports.getAllBookings = async (req, res) => {
     }
     const total = await Booking.countDocuments(filter);
     const bookings = await Booking.find(filter)
-      .populate("resourceId")
+      .populate({
+        path: "resourceId",
+        populate: { path: "type", select: "name -_id" },
+      })
       .populate("userId")
       .skip(skip)
       .limit(limit)

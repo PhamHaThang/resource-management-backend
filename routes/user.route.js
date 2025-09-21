@@ -2,31 +2,27 @@ const express = require("express");
 const userController = require("../controllers/user.controller");
 const { authenticateJWT, requireRoles } = require("../middlewares/auth");
 const router = express.Router();
+const { singleUpload } = require("../middlewares/uploadImage");
+
 router.use(authenticateJWT);
+// USER
+router.get("/profile", userController.getProfile);
+router.put("/profile", singleUpload("avatar"), userController.updateProfile);
+router.put("/profile/change-password", userController.changePassword);
 // ADMIN
 router.get("/", requireRoles("admin"), userController.getAllUsers);
-router.put("/:id", requireRoles("admin"), userController.updateUser);
-router.put(
-  "/:id/status",
+router.post(
+  "/",
   requireRoles("admin"),
-  userController.toggleUserStatus
-);
-
-// USER
-router.get(
-  "/profile",
-  requireRoles("admin", "teacher", "student"),
-  userController.getProfile
+  singleUpload("avatar"),
+  userController.createUser
 );
 router.put(
-  "/profile",
-  requireRoles("admin", "teacher", "student"),
-  userController.updateProfile
+  "/:id",
+  requireRoles("admin"),
+  singleUpload("avatar"),
+  userController.updateUser
 );
-router.put(
-  "/profile/change-password",
-  requireRoles("admin", "teacher", "student"),
-  userController.changePassword
-);
+router.delete("/:id", requireRoles("admin"), userController.deleteUser);
 
 module.exports = router;

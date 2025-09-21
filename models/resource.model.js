@@ -8,9 +8,9 @@ const resourceSchema = new mongoose.Schema(
       trim: true,
     },
     type: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ResourceType",
       required: true,
-      enum: ["room", "device"],
     },
     description: {
       type: String,
@@ -34,7 +34,19 @@ const resourceSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        Object.keys(ret).forEach((key) => {
+          if (ret[key] == null || ret[key] === "") {
+            delete ret[key];
+          }
+        });
+        return ret;
+      },
+    },
+  }
 );
 
 module.exports = mongoose.model("Resource", resourceSchema);

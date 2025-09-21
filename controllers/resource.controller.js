@@ -1,4 +1,5 @@
 const Resource = require("../models/resource.model");
+const ResourceType = require("../models/resourceType.model");
 const QRCode = require("qrcode");
 const { getPaginationAndFilter } = require("../utils/pagination");
 // [POST] /api/resources
@@ -14,6 +15,14 @@ exports.createResource = async (req, res) => {
     status,
   } = req.body;
   try {
+    const typeExists = await ResourceType.findById(type);
+    if (!typeExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Loại tài nguyên không tồn tại",
+        error: "NOT_FOUND",
+      });
+    }
     const newResource = new Resource({
       name,
       type,
@@ -58,23 +67,24 @@ exports.getAllResources = async (req, res) => {
     const total = await Resource.countDocuments(filter);
 
     const resources = await Resource.find(filter)
+      .populate("type", "name -_id")
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
     return res.json({
       success: true,
-      message: "Lấy danh sách tạo tài nguyên thành công",
+      message: "Lấy danh sách tài nguyên thành công",
       data: {
         total,
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page,
+        limit,
         resources,
       },
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: "Lỗi lấy danh sách tạo tài nguyên",
+      message: "Lỗi hệ thống",
       error: error.message,
     });
   }
@@ -85,7 +95,7 @@ exports.getResourceById = async (req, res) => {
     const resource = await Resource.findOne({
       _id: req.params.id,
       deleted: false,
-    });
+    }).populate("type", "name -_id");
     if (!resource) {
       return res.status(404).json({
         success: false,
@@ -110,6 +120,16 @@ exports.getResourceById = async (req, res) => {
 exports.updateResource = async (req, res) => {
   try {
     const updateData = req.body;
+    if (updateData.type) {
+      const typeExists = await ResourceType.findById(updateData.type);
+      if (!typeExists) {
+        return res.status(404).json({
+          success: false,
+          message: "Loại tài nguyên không tồn tại",
+          error: "NOT_FOUND",
+        });
+      }
+    }
     const updatedResource = await Resource.findOneAndUpdate(
       { _id: req.params.id, deleted: false },
       updateData,

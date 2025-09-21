@@ -24,7 +24,19 @@ const bookingSchema = new mongoose.Schema(
     },
     rejectReason: { type: String, default: "" },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        Object.keys(ret).forEach((key) => {
+          if (ret[key] == null || ret[key] === "") {
+            delete ret[key];
+          }
+        });
+        return ret;
+      },
+    },
+  }
 );
 
 module.exports = mongoose.model("Booking", bookingSchema);

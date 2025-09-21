@@ -21,7 +21,19 @@ const issueReportSchema = new mongoose.Schema(
       default: "new",
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        Object.keys(ret).forEach((key) => {
+          if (ret[key] == null || ret[key] === "") {
+            delete ret[key];
+          }
+        });
+        return ret;
+      },
+    },
+  }
 );
 
 module.exports = mongoose.model("Issue-Report", issueReportSchema);
