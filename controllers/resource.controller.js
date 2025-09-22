@@ -4,17 +4,9 @@ const QRCode = require("qrcode");
 const { getPaginationAndFilter } = require("../utils/pagination");
 // [POST] /api/resources
 exports.createResource = async (req, res) => {
-  const {
-    name,
-    type,
-    description,
-    images,
-    usageRules,
-    capacity,
-    location,
-    status,
-  } = req.body;
   try {
+    const { name, type, description, usageRules, capacity, location, status } =
+      req.body;
     const typeExists = await ResourceType.findById(type);
     if (!typeExists) {
       return res.status(404).json({
@@ -23,6 +15,7 @@ exports.createResource = async (req, res) => {
         error: "NOT_FOUND",
       });
     }
+    const images = req.files ? req.files.map((file) => file.path) : [];
     const newResource = new Resource({
       name,
       type,
@@ -129,6 +122,9 @@ exports.updateResource = async (req, res) => {
           error: "NOT_FOUND",
         });
       }
+    }
+    if (req.files && req.files.length > 0) {
+      updateData.images = req.files.map((file) => file.path);
     }
     const updatedResource = await Resource.findOneAndUpdate(
       { _id: req.params.id, deleted: false },

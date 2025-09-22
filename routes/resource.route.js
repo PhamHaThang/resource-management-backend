@@ -1,7 +1,7 @@
 const express = require("express");
 const resourceController = require("../controllers/resource.controller");
 const { authenticateJWT, requireRoles } = require("../middlewares/auth");
-
+const { multipleUpload } = require("../middlewares/uploadImage");
 const router = express.Router();
 // USER
 router.get("/", resourceController.getAllResources);
@@ -11,12 +11,14 @@ router.post(
   "/",
   authenticateJWT,
   requireRoles("admin"),
+  multipleUpload("images"),
   resourceController.createResource
 );
 router.put(
   "/:id",
   authenticateJWT,
   requireRoles("admin"),
+  multipleUpload("images"),
   resourceController.updateResource
 );
 router.delete(
