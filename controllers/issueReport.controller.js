@@ -1,13 +1,15 @@
 const { getPaginationAndFilter } = require("../utils/pagination");
+const { createNotificationForUser } = require("../utils/notification");
 const IssueReport = require("../models/issueReport.model");
 // [POST] /api/issue-reports
 exports.createIssueReport = async (req, res) => {
   try {
     const { resourceId, title, description } = req.body;
-    const userId = req.user._id;
+    const images = req.files ? req.files.map((file) => file.path) : [];
     const newReport = new IssueReport({
-      userId,
+      userId: req.user._id,
       resourceId,
+      images,
       title,
       description,
     });
@@ -90,11 +92,11 @@ exports.updateIssueStatus = async (req, res) => {
         error: "NOT_FOUND",
       });
     await createNotificationForUser(
-      issueReport.userId._id,
+      report.userId._id,
       "Trạng thái báo cáo sự cố thay đổi",
       `Báo cáo sự cố của bạn đã chuyển sang trạng thái: ${status}`,
       "issueReport",
-      issueReport._id
+      report._id
     );
     return res.json({
       success: true,

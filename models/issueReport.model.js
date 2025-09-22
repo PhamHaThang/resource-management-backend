@@ -14,7 +14,7 @@ const issueReportSchema = new mongoose.Schema(
       required: true,
     },
     description: { type: String, required: true },
-    imageUrls: [{ type: String }],
+    images: [{ type: String }],
     status: {
       type: String,
       enum: ["new", "in_progress", "resolved"],

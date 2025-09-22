@@ -4,22 +4,16 @@ const bookingController = require("../controllers/booking.controller");
 const { authenticateJWT, requireRoles } = require("../middlewares/auth");
 
 router.use(authenticateJWT);
+// USER
+router.get("/", bookingController.getAllBookings);
+router.get("/:id", bookingController.getBookingDetail);
 router.post(
   "/",
   requireRoles("admin", "teacher", "student"),
   bookingController.createBooking
 );
 
-router.get(
-  "/",
-  requireRoles("admin", "teacher", "student"),
-  bookingController.getAllBookings
-);
-router.get(
-  "/:id",
-  requireRoles("admin", "teacher", "student"),
-  bookingController.getBookingDetail
-);
+// ADMIN
 router.put("/:id", requireRoles("admin"), bookingController.updateBooking);
 router.put(
   "/:id/status",
@@ -29,7 +23,6 @@ router.put(
 router.delete("/:id", requireRoles("admin"), bookingController.deleteBooking);
 router.put(
   "/:id/cancel",
-  authenticateJWT,
   requireRoles("admin", "teacher", "student"),
   bookingController.cancelBookingByUser
 );

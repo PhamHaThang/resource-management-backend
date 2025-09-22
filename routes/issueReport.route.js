@@ -1,12 +1,14 @@
 const express = require("express");
 const issueReportController = require("../controllers/issueReport.controller");
 const { authenticateJWT, requireRoles } = require("../middlewares/auth");
+const { multipleUpload } = require("../middlewares/uploadImage");
 const router = express.Router();
 
 router.use(authenticateJWT);
 router.post(
   "/",
   requireRoles("admin", "teacher", "student"),
+  multipleUpload("images"),
   issueReportController.createIssueReport
 );
 router.get(
