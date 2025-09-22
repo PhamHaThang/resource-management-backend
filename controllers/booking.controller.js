@@ -65,7 +65,7 @@ exports.getBookingDetail = async (req, res) => {
         path: "resourceId",
         populate: { path: "type", select: "name -_id" },
       })
-      .populate("userId");
+      .populate("userId", "-password");
     if (!booking)
       return res.status(404).json({
         success: false,
@@ -111,7 +111,7 @@ exports.getAllBookings = async (req, res) => {
         path: "resourceId",
         populate: { path: "type", select: "name -_id" },
       })
-      .populate("userId")
+      .populate("userId", "-password")
       .skip(skip)
       .limit(limit)
       .sort({ startTime: -1 });
@@ -137,7 +137,8 @@ exports.getAllBookings = async (req, res) => {
 exports.updateBooking = async (req, res) => {
   try {
     const updateData = { ...req.body };
-
+    delete updateData.userId;
+    delete updateData.resourceId;
     if (updateData.status) {
       const validStatuses = ["new", "approved", "rejected", "cancelled"];
       if (!validStatuses.includes(updateData.status)) {
@@ -148,7 +149,51 @@ exports.updateBooking = async (req, res) => {
         });
       }
     }
+    if (updateData.startTime && updateData.endTime) {
+      const currentBooking = await Booking.findById(req.params.id);
+      if (!currentBooking) {
+        return sendResponse(
+          res,
+          false,
+          "Không tìm thấy booking",
+          null,
+          "NOT_FOUND",
+          404
+        );
+      }
 
+      const conflictCount = await Booking.countDocuments({
+        _id: { $ne: req.params.id },
+        resourceId: currentBooking.resourceId,
+        $or: [
+          {
+            startTime: {
+              $lt: new Date(updateData.endTime),
+              $gte: new Date(updateData.startTime),
+            },
+          },
+          {
+            endTime: {
+              $gt: new Date(updateData.startTime),
+              $lte: new Date(updateData.endTime),
+            },
+          },
+          {
+            startTime: { $lte: new Date(updateData.startTime) },
+            endTime: { $gte: new Date(updateData.endTime) },
+          },
+        ],
+        status: { $in: ["new", "approved"] },
+      });
+
+      if (conflictCount > 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Thời gian đặt booking bị xung đột với booking khác",
+          error: "TIME_CONFLICT",
+        });
+      }
+    }
     const booking = await Booking.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
     });
@@ -260,7 +305,13 @@ exports.cancelBookingByUser = async (req, res) => {
         error: "FORBIDDEN",
       });
     }
-
+    await createNotificationForUser(
+      booking.userId._id,
+      "Booking đã được hủy",
+      `Booking của bạn đã hủy thành công`,
+      "booking",
+      booking._id
+    );
     booking.status = "cancelled";
     await booking.save();
     return res.json({

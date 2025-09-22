@@ -7,11 +7,7 @@ router.use(authenticateJWT);
 // USER
 router.get("/", bookingController.getAllBookings);
 router.get("/:id", bookingController.getBookingDetail);
-router.post(
-  "/",
-  requireRoles("admin", "teacher", "student"),
-  bookingController.createBooking
-);
+router.post("/", bookingController.createBooking);
 
 // ADMIN
 router.put("/:id", requireRoles("admin"), bookingController.updateBooking);
@@ -21,10 +17,6 @@ router.put(
   bookingController.updateBookingStatus
 );
 router.delete("/:id", requireRoles("admin"), bookingController.deleteBooking);
-router.put(
-  "/:id/cancel",
-  requireRoles("admin", "teacher", "student"),
-  bookingController.cancelBookingByUser
-);
+router.put("/:id/cancel", bookingController.cancelBookingByUser);
 
 module.exports = router;
