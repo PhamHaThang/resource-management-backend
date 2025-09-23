@@ -1,8 +1,11 @@
 const express = require("express");
 const userController = require("../controllers/user.controller");
-const { authenticateJWT, requireRoles } = require("../middlewares/auth");
+const {
+  authenticateJWT,
+  requireRoles,
+} = require("../middlewares/auth.middleware");
 const router = express.Router();
-const { singleUpload } = require("../middlewares/uploadImage");
+const { singleUpload } = require("../middlewares/uploadImage.middleware");
 
 router.use(authenticateJWT);
 // USER

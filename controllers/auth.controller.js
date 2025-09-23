@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
 const crypto = require("crypto");
-const { sendEmail } = require("../utils/sendMail");
+const { sendMail } = require("../utils/sendMail");
 require("dotenv").config();
 
 // [POST] /api/auth/register
@@ -127,7 +127,7 @@ exports.forgotPassword = async (req, res) => {
     const html = `<p>Chào bạn,</p>
       <p>Vui lòng nhấn vào <a href="${resetUrl}">đây</a> để đặt lại mật khẩu. Link có hiệu lực trong 1 giờ.</p>`;
 
-    await sendEmail(email, "Đặt lại mật khẩu", html);
+    await sendMail(email, "Đặt lại mật khẩu", html);
 
     return res.json({
       success: true,

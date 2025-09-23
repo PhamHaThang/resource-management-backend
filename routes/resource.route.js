@@ -1,7 +1,10 @@
 const express = require("express");
 const resourceController = require("../controllers/resource.controller");
-const { authenticateJWT, requireRoles } = require("../middlewares/auth");
-const { multipleUpload } = require("../middlewares/uploadImage");
+const {
+  authenticateJWT,
+  requireRoles,
+} = require("../middlewares/auth.middleware");
+const { multipleUpload } = require("../middlewares/uploadImage.middleware");
 const router = express.Router();
 // USER
 router.get("/", resourceController.getAllResources);

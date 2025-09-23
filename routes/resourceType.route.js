@@ -1,7 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const resourceTypeController = require("../controllers/resourceType.controller");
-const { authenticateJWT, requireRoles } = require("../middlewares/auth");
+const {
+  authenticateJWT,
+  requireRoles,
+} = require("../middlewares/auth.middleware");
 
 router.post(
   "/",
