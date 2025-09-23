@@ -7,14 +7,6 @@ exports.createBooking = async (req, res) => {
     const { resourceId, startTime, endTime, purpose } = req.body;
     const userId = req.user._id;
 
-    if (new Date(startTime) >= new Date(endTime)) {
-      return res.status(400).json({
-        success: false,
-        message: "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc",
-        error: "INVALID_TIME",
-      });
-    }
-
     const overlappingBooking = await Booking.findOne({
       resourceId,
       status: { $in: ["pending", "approved"] },
@@ -139,31 +131,19 @@ exports.updateBooking = async (req, res) => {
     const updateData = { ...req.body };
     delete updateData.userId;
     delete updateData.resourceId;
-    if (updateData.status) {
-      const validStatuses = ["new", "approved", "rejected", "cancelled"];
-      if (!validStatuses.includes(updateData.status)) {
-        return res.status(400).json({
-          success: false,
-          message: "Trạng thái không hợp lệ",
-          error: "INVALID_STATUS",
-        });
-      }
-    }
+    const id = req.params.id;
     if (updateData.startTime && updateData.endTime) {
-      const currentBooking = await Booking.findById(req.params.id);
+      const currentBooking = await Booking.findById(id);
       if (!currentBooking) {
-        return sendResponse(
-          res,
-          false,
-          "Không tìm thấy booking",
-          null,
-          "NOT_FOUND",
-          404
-        );
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy booking",
+          error: "NOT_FOUND",
+        });
       }
 
       const conflictCount = await Booking.countDocuments({
-        _id: { $ne: req.params.id },
+        _id: { $ne: id },
         resourceId: currentBooking.resourceId,
         $or: [
           {
@@ -194,7 +174,7 @@ exports.updateBooking = async (req, res) => {
         });
       }
     }
-    const booking = await Booking.findByIdAndUpdate(req.params.id, updateData, {
+    const booking = await Booking.findByIdAndUpdate(id, updateData, {
       new: true,
     });
     if (!booking)
@@ -221,14 +201,6 @@ exports.updateBookingStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, rejectReason } = req.body;
-
-    if (!["pending", "approved", "rejected", "cancelled"].includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Trạng thái không hợp lệ",
-        error: "INVALID_STATUS",
-      });
-    }
     const updateData = { status };
     if (status === "rejected" && rejectReason) {
       updateData.rejectReason = rejectReason;
@@ -298,7 +270,7 @@ exports.cancelBookingByUser = async (req, res) => {
         message: "Không tìm thấy booking",
         error: "NOT_FOUND",
       });
-    if (!booking.userId.equals(req.user._id)) {
+    if (!booking.userId.equals(req.user._id) || req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
         message: "Không đủ quyền hủy booking này",
@@ -319,6 +291,7 @@ exports.cancelBookingByUser = async (req, res) => {
       message: "Booking đã được hủy",
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: "Lỗi hệ thống",

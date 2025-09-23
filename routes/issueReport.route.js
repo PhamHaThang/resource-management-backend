@@ -5,6 +5,7 @@ const {
   requireRoles,
 } = require("../middlewares/auth.middleware");
 const { multipleUpload } = require("../middlewares/uploadImage.middleware");
+const issueReportMiddleware = require("../middlewares/issueReport.middleware");
 const router = express.Router();
 
 router.use(authenticateJWT);
@@ -12,6 +13,7 @@ router.post(
   "/",
   requireRoles("admin", "teacher", "student"),
   multipleUpload("images"),
+  issueReportMiddleware.validateCreateIssueReport,
   issueReportController.createIssueReport
 );
 router.get(
@@ -27,6 +29,7 @@ router.get(
 router.put(
   "/:id/status",
   requireRoles("admin"),
+  issueReportMiddleware.validateUpdateIssueReportStatus,
   issueReportController.updateIssueStatus
 );
 router.delete(

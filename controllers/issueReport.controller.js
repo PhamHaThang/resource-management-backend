@@ -73,13 +73,6 @@ exports.updateIssueStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    if (!["new", "in_progress", "resolved"].includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Trạng thái không hợp lệ",
-        error: "INVALID_STATUS",
-      });
-    }
     const report = await IssueReport.findByIdAndUpdate(
       id,
       { status },
