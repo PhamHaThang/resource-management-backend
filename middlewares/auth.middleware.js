@@ -14,7 +14,6 @@ exports.authenticateJWT = async (req, res, next) => {
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(payload.userId);
-    console.log(user);
     if (!user || user.status !== "active" || user.deleted) {
       return res.status(401).json({
         success: false,

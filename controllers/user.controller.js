@@ -97,15 +97,6 @@ exports.createUser = async (req, res) => {
         error: "EMAIL_EXISTS",
       });
     }
-    const allowedRoles = ["student", "teacher", "admin"];
-    if (!allowedRoles.includes(role)) {
-      return res.status(400).json({
-        success: false,
-        message: "Role không hợp lệ",
-        error: "INVALID_ROLE",
-      });
-    }
-
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
@@ -230,14 +221,6 @@ exports.updateProfile = async (req, res) => {
 exports.changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({
-        success: false,
-        message: "Thiếu thông tin mật khẩu",
-        error: "BAD_REQUEST",
-      });
-    }
-
     const user = await User.findById(req.user._id);
     if (!user)
       return res.status(404).json({
