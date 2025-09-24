@@ -3,18 +3,28 @@ const IssueReport = require("../models/issueReport.model");
 // [GET] /api/dashboard/booking-stats
 exports.getBookingStats = async (req, res) => {
   try {
-    const stats = await Booking.aggregate({
-      $group: {
-        _id: "status",
-        count: { $sum: 1 },
+    const stats = await Booking.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
       },
-    });
+      {
+        $project: {
+          _id: 0,
+          status: "$_id",
+          count: 1,
+        },
+      },
+    ]);
     return res.json({
       success: true,
       message: "Lấy thống kê booking theo trạng thái thành công",
       data: stats,
     });
   } catch (error) {
+    console.log(error);
     return res
       .status(500)
       .json({ success: false, message: "Lỗi hệ thống", error: error.message });
@@ -28,6 +38,13 @@ exports.getIssueReportStats = async (req, res) => {
         $group: {
           _id: "$status",
           count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          status: "$_id",
+          count: 1,
         },
       },
     ]);
@@ -50,10 +67,16 @@ exports.getBookingStatsByDate = async (req, res) => {
   try {
     const { fromDate, toDate } = req.query;
     const match = {};
-    if (fromDate) match.createdAt = { $gte: newDate(fromDate) };
-    if (toDate) {
-      match.createdAt = match.createdAt || {};
-      match.createdAt.$lte = { $gte: newDate(fromDate) };
+    if (fromDate || toDate) {
+      match.createdAt = {};
+      if (fromDate) {
+        match.createdAt.$gte = new Date(fromDate);
+      }
+      if (toDate) {
+        const endDate = new Date(toDate);
+        endDate.setHours(23, 59, 59, 999);
+        match.createdAt.$lte = endDate;
+      }
     }
     const stats = await Booking.aggregate([
       { $match: match },
@@ -65,7 +88,14 @@ exports.getBookingStatsByDate = async (req, res) => {
           count: { $sum: 1 },
         },
       },
-      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          date: "$_id",
+          count: 1,
+        },
+      },
+      { $sort: { date: 1 } },
     ]);
     return res.json({
       success: true,

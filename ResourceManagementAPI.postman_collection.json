@@ -1,0 +1,864 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+    "name": "Hệ thống Quản lý Tài nguyên",
+    "description": "Tài liệu API cho backend dự án Quản lý và đăng ký Tài nguyên Học viện.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Xác thực",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Test User", "type": "text" },
+                { "key": "email", "value": "user@example.com", "type": "text" },
+                { "key": "password", "value": "password123", "type": "text" },
+                {
+                  "key": "role",
+                  "value": "student",
+                  "type": "text",
+                  "description": "student | teacher"
+                },
+                { "key": "studentCode", "value": "B20DCCN001", "type": "text" },
+                { "key": "avatar", "type": "file", "src": "" }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/register",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Đăng ký tài khoản mới cho sinh viên hoặc giảng viên."
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"adminpassword\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/login",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Đăng nhập để nhận JWT token."
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/forgot-password",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "forgot-password"]
+            },
+            "description": "Gửi yêu cầu đặt lại mật khẩu qua email."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"token\": \"your_reset_token_from_email\",\n    \"newPassword\": \"newStrongPassword123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/reset-password",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "reset-password"]
+            },
+            "description": "Đặt lại mật khẩu bằng token đã nhận."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users - Người dùng",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/users/profile",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users", "profile"]
+            },
+            "description": "Lấy thông tin cá nhân của người dùng đã đăng nhập."
+          },
+          "response": []
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Updated Name", "type": "text" },
+                { "key": "phone", "value": "0987654321", "type": "text" },
+                { "key": "avatar", "type": "file", "src": "" }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/users/profile",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users", "profile"]
+            },
+            "description": "Cập nhật thông tin cá nhân (không bao gồm role, status, password)."
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"currentPassword\": \"password123\",\n    \"newPassword\": \"newStrongPassword123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/users/profile/change-password",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users", "profile", "change-password"]
+            },
+            "description": "Người dùng tự thay đổi mật khẩu của mình."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Get All Users",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/users?role=student&status=active&page=1&limit=10",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users"],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "student",
+                  "description": "student | teacher | admin"
+                },
+                {
+                  "key": "status",
+                  "value": "active",
+                  "description": "active | inactive | blocked"
+                },
+                {
+                  "key": "email",
+                  "value": "example@email.com",
+                  "disabled": true
+                },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            },
+            "description": "**Yêu cầu quyền Admin.** Lấy danh sách người dùng với bộ lọc và phân trang."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Create User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "New User by Admin", "type": "text" },
+                {
+                  "key": "email",
+                  "value": "new.user@example.com",
+                  "type": "text"
+                },
+                { "key": "password", "value": "password123", "type": "text" },
+                { "key": "role", "value": "teacher", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/users",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users"]
+            },
+            "description": "**Yêu cầu quyền Admin.** Tạo một người dùng mới."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Update User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Updated by Admin", "type": "text" },
+                { "key": "status", "value": "blocked", "type": "text" },
+                { "key": "role", "value": "student", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/users/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users", ":id"],
+              "variable": [{ "key": "id", "value": "user_id" }]
+            },
+            "description": "**Yêu cầu quyền Admin.** Cập nhật thông tin của một người dùng bất kỳ."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Delete User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/users/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users", ":id"],
+              "variable": [{ "key": "id", "value": "user_id_to_delete" }]
+            },
+            "description": "**Yêu cầu quyền Admin.** Xóa mềm (soft delete) một người dùng."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Resources - Tài nguyên",
+      "item": [
+        {
+          "name": "Get All Resources",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/resources?name=Phòng&type=resource_type_id&status=available",
+              "host": ["{{BASE_URL}}"],
+              "path": ["resources"],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Phòng",
+                  "description": "Tìm kiếm theo tên tài nguyên"
+                },
+                {
+                  "key": "type",
+                  "value": "resource_type_id",
+                  "description": "Lọc theo ID loại tài nguyên"
+                },
+                {
+                  "key": "status",
+                  "value": "available",
+                  "description": "available | maintenance | unavailable"
+                }
+              ]
+            },
+            "description": "Lấy danh sách tất cả tài nguyên. Endpoint này public."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Resource By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/resources/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["resources", ":id"],
+              "variable": [{ "key": "id", "value": "resource_id" }]
+            },
+            "description": "Lấy thông tin chi tiết của một tài nguyên."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Create Resource",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Phòng học A101", "type": "text" },
+                {
+                  "key": "type",
+                  "value": "resource_type_id",
+                  "type": "text",
+                  "description": "ID từ collection Resource Types"
+                },
+                {
+                  "key": "description",
+                  "value": "Phòng học có máy chiếu và điều hòa.",
+                  "type": "text"
+                },
+                { "key": "images", "type": "file", "src": [] }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/resources",
+              "host": ["{{BASE_URL}}"],
+              "path": ["resources"]
+            },
+            "description": "**Yêu cầu quyền Admin.** Tạo một tài nguyên mới."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Update Resource",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Phòng học A101 (Đã sửa)",
+                  "type": "text"
+                },
+                { "key": "status", "value": "maintenance", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/resources/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["resources", ":id"],
+              "variable": [{ "key": "id", "value": "resource_id" }]
+            },
+            "description": "**Yêu cầu quyền Admin.** Cập nhật thông tin tài nguyên."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Delete Resource",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/resources/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["resources", ":id"],
+              "variable": [{ "key": "id", "value": "resource_id" }]
+            },
+            "description": "**Yêu cầu quyền Admin.** Xóa mềm tài nguyên."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Resource Types - Loại tài nguyên",
+      "item": [
+        {
+          "name": "Get All Resource Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/resource-types",
+              "host": ["{{BASE_URL}}"],
+              "path": ["resource-types"]
+            },
+            "description": "Lấy danh sách các loại tài nguyên."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Create Resource Type",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Phòng thực hành\",\n    \"description\": \"Phòng có trang thiết bị chuyên dụng\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/resource-types",
+              "host": ["{{BASE_URL}}"],
+              "path": ["resource-types"]
+            },
+            "description": "**Yêu cầu quyền Admin.**"
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Update Resource Type",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Phòng thực hành máy tính\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/resource-types/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["resource-types", ":id"],
+              "variable": [{ "key": "id", "value": "resource_type_id" }]
+            },
+            "description": "**Yêu cầu quyền Admin.**"
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Delete Resource Type",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/resource-types/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["resource-types", ":id"],
+              "variable": [{ "key": "id", "value": "resource_type_id" }]
+            },
+            "description": "**Yêu cầu quyền Admin.**"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Bookings - Đặt lịch",
+      "item": [
+        {
+          "name": "Create Booking",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"resourceId\": \"your_resource_id\",\n    \"startTime\": \"2025-09-25T09:00:00.000Z\",\n    \"endTime\": \"2025-09-25T11:00:00.000Z\",\n    \"purpose\": \"Họp nhóm môn Lập trình Web\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/bookings",
+              "host": ["{{BASE_URL}}"],
+              "path": ["bookings"]
+            },
+            "description": "Người dùng (student, teacher) tạo một yêu cầu đặt lịch mới."
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Bookings",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/bookings?status=pending",
+              "host": ["{{BASE_URL}}"],
+              "path": ["bookings"],
+              "query": [{ "key": "status", "value": "pending" }]
+            },
+            "description": "Lấy danh sách các booking. Admin sẽ thấy tất cả, student/teacher chỉ thấy của mình."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booking Detail",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/bookings/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["bookings", ":id"],
+              "variable": [{ "key": "id", "value": "booking_id" }]
+            },
+            "description": "Lấy chi tiết một booking. Student chỉ xem được booking của mình."
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel My Booking",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/bookings/:id/cancel",
+              "host": ["{{BASE_URL}}"],
+              "path": ["bookings", ":id", "cancel"],
+              "variable": [{ "key": "id", "value": "booking_id" }]
+            },
+            "description": "Người dùng tự hủy booking của mình."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Update Booking Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"approved\", // approved | rejected\n    \"rejectReason\": \"Phòng đã được đặt trước đó.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/bookings/:id/status",
+              "host": ["{{BASE_URL}}"],
+              "path": ["bookings", ":id", "status"],
+              "variable": [{ "key": "id", "value": "booking_id" }]
+            },
+            "description": "**Yêu cầu quyền Admin.** Phê duyệt hoặc từ chối một yêu cầu đặt lịch."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Issue Reports - Báo cáo sự cố",
+      "item": [
+        {
+          "name": "Create Issue Report",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Máy chiếu phòng A101 bị mờ",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Hình ảnh hiển thị không rõ nét, khó nhìn.",
+                  "type": "text"
+                },
+                {
+                  "key": "resourceId",
+                  "value": "resource_id_of_A101",
+                  "type": "text"
+                },
+                { "key": "images", "type": "file", "src": [] }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/issue-reports",
+              "host": ["{{BASE_URL}}"],
+              "path": ["issue-reports"]
+            },
+            "description": "Người dùng tạo một báo cáo sự cố mới."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Issue Reports",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/issue-reports?status=new",
+              "host": ["{{BASE_URL}}"],
+              "path": ["issue-reports"],
+              "query": [{ "key": "status", "value": "new" }]
+            },
+            "description": "Lấy danh sách các báo cáo sự cố. Admin thấy tất cả, user chỉ thấy của mình."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Update Issue Report Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"in_progress\" \n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/issue-reports/:id/status",
+              "host": ["{{BASE_URL}}"],
+              "path": ["issue-reports", ":id", "status"],
+              "variable": [{ "key": "id", "value": "report_id" }]
+            },
+            "description": "**Yêu cầu quyền Admin.** Cập nhật trạng thái của báo cáo: `new`, `in_progress`, `resolved`."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dashboard - Thống kê",
+      "item": [
+        {
+          "name": "[Admin] Get Booking Stats",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/dashboard/booking-stats",
+              "host": ["{{BASE_URL}}"],
+              "path": ["dashboard", "booking-stats"]
+            },
+            "description": "**Yêu cầu quyền Admin.** Thống kê số lượng booking theo từng trạng thái."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Get Issue Report Stats",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{TOKEN}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/dashboard/issue-report-stats",
+              "host": ["{{BASE_URL}}"],
+              "path": ["dashboard", "issue-report-stats"]
+            },
+            "description": "**Yêu cầu quyền Admin.** Thống kê số lượng báo cáo sự cố theo từng trạng thái."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Get Booking Stats By Date",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/dashboard/booking-stats-by-date?fromDate=2025-01-01&toDate=2025-12-31",
+              "host": ["{{BASE_URL}}"],
+              "path": ["dashboard", "booking-stats-by-date"],
+              "query": [
+                {
+                  "key": "fromDate",
+                  "value": "2025-01-01",
+                  "description": "Ngày bắt đầu (YYYY-MM-DD)"
+                },
+                {
+                  "key": "toDate",
+                  "value": "2025-12-31",
+                  "description": "Ngày kết thúc (YYYY-MM-DD)"
+                }
+              ]
+            },
+            "description": "**Yêu cầu quyền Admin.** Thống kê số lượng booking được tạo trong một khoảng thời gian."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{TOKEN}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:5000/api"
+    },
+    {
+      "key": "TOKEN",
+      "value": ""
+    }
+  ]
+}
