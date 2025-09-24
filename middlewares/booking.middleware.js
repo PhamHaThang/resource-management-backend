@@ -8,25 +8,38 @@ exports.validateCreateBooking = (req, res, next) => {
   ) {
     return res
       .status(400)
-      .json({ success: false, message: "Tài nguyên đặt không được để trống" });
+      .json({
+        success: false,
+        message: "Tài nguyên đặt không được để trống",
+        error: "RESOURCE_ID_REQUIRED",
+      });
   }
 
   if (!startTime || isNaN(Date.parse(startTime))) {
     return res
       .status(400)
-      .json({ success: false, message: "Thời gian bắt đầu không hợp lệ" });
+      .json({
+        success: false,
+        message: "Thời gian bắt đầu không hợp lệ",
+        error: "START_TIME_INVALID",
+      });
   }
 
   if (!endTime || isNaN(Date.parse(endTime))) {
     return res
       .status(400)
-      .json({ success: false, message: "Thời gian kết thúc không hợp lệ" });
+      .json({
+        success: false,
+        message: "Thời gian kết thúc không hợp lệ",
+        error: "END_TIME_INVALID",
+      });
   }
 
   if (new Date(startTime) >= new Date(endTime)) {
     return res.status(400).json({
       success: false,
       message: "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc",
+      error: "START_TIME_MUST_BE_LESS_THAN_END_TIME",
     });
   }
 
@@ -38,44 +51,49 @@ exports.validateUpdateBooking = (req, res, next) => {
 
   if (startTime !== undefined) {
     if (typeof startTime !== "string" || startTime.trim() === "") {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Thời gian bắt đầu không được để trống",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Thời gian bắt đầu không được để trống",
+        error: "START_TIME_REQUIRED",
+      });
     }
     if (isNaN(Date.parse(startTime))) {
       return res
         .status(400)
-        .json({ success: false, message: "Thời gian bắt đầu không hợp lệ" });
+        .json({
+          success: false,
+          message: "Thời gian bắt đầu không hợp lệ",
+          error: "START_TIME_INVALID",
+        });
     }
   }
 
   if (endTime !== undefined) {
     if (typeof endTime !== "string" || endTime.trim() === "") {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Thời gian kết thúc không được để trống",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Thời gian kết thúc không được để trống",
+        error: "END_TIME_REQUIRED",
+      });
     }
     if (isNaN(Date.parse(endTime))) {
       return res
         .status(400)
-        .json({ success: false, message: "Thời gian kết thúc không hợp lệ" });
+        .json({
+          success: false,
+          message: "Thời gian kết thúc không hợp lệ",
+          error: "END_TIME_INVALID",
+        });
     }
   }
 
   if (startTime !== undefined && endTime !== undefined) {
     if (new Date(startTime) >= new Date(endTime)) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc",
+        error: "START_TIME_MUST_BE_LESS_THAN_END_TIME",
+      });
     }
   }
 
@@ -83,7 +101,11 @@ exports.validateUpdateBooking = (req, res, next) => {
   if (status && !validStatuses.includes(status)) {
     return res
       .status(400)
-      .json({ success: false, message: "Trạng thái booking không hợp lệ" });
+      .json({
+        success: false,
+        message: "Trạng thái booking không hợp lệ",
+        error: "INVALID_STATUS",
+      });
   }
 
   next();
@@ -95,7 +117,11 @@ exports.validateUpdateBookingStatus = (req, res, next) => {
   if (status && !validStatuses.includes(status)) {
     return res
       .status(400)
-      .json({ success: false, message: "Trạng thái booking không hợp lệ" });
+      .json({
+        success: false,
+        message: "Trạng thái booking không hợp lệ",
+        error: "INVALID_STATUS",
+      });
   }
 
   next();

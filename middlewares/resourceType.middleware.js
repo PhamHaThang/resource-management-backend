@@ -5,13 +5,16 @@ exports.validateCreateResourceType = (req, res, next) => {
     return res.status(400).json({
       success: false,
       message: "Tên loại tài nguyên không được để trống",
+      error: "NAME_REQUIRED",
     });
   }
 
   if (description && typeof description !== "string") {
-    return res
-      .status(400)
-      .json({ success: false, message: "Mô tả không hợp lệ" });
+    return res.status(400).json({
+      success: false,
+      message: "Mô tả không hợp lệ",
+      error: "DESCRIPTION_INVALID",
+    });
   }
 
   next();
@@ -23,13 +26,18 @@ exports.validateUpdateResourceType = (req, res, next) => {
     return res.status(400).json({
       success: false,
       message: "Tên loại tài nguyên không được để trống",
+      error: "NAME_REQUIRED",
     });
   }
 
   if (description && typeof description !== "string") {
     return res
       .status(400)
-      .json({ success: false, message: "Mô tả không hợp lệ" });
+      .json({
+        success: false,
+        message: "Mô tả không hợp lệ",
+        error: "DESCRIPTION_INVALID",
+      });
   }
 
   next();

@@ -1,10 +1,14 @@
+const e = require("express");
+
 exports.validateCreateIssueReport = (req, res, next) => {
   const { title, description, resourceId } = req.body;
 
   if (!title || typeof title !== "string" || title.trim().length === 0) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Tiêu đề báo cáo không được để trống" });
+    return res.status(400).json({
+      success: false,
+      message: "Tiêu đề báo cáo không được để trống",
+      error: "TITLE_REQUIRED",
+    });
   }
 
   if (
@@ -15,6 +19,7 @@ exports.validateCreateIssueReport = (req, res, next) => {
     return res.status(400).json({
       success: false,
       message: "Nội dung báo cáo không được để trống",
+      error: "DESCRIPTION_REQUIRED",
     });
   }
 
@@ -26,6 +31,7 @@ exports.validateCreateIssueReport = (req, res, next) => {
     return res.status(400).json({
       success: false,
       message: "Tài nguyên liên quan không được để trống",
+      error: "RESOURCE_ID_REQUIRED",
     });
   }
 
@@ -38,7 +44,11 @@ exports.validateUpdateIssueReportStatus = (req, res, next) => {
     if (!validStatuses.includes(status)) {
       return res
         .status(400)
-        .json({ success: false, message: "Trạng thái không hợp lệ" });
+        .json({
+          success: false,
+          message: "Trạng thái không hợp lệ",
+          error: "INVALID_STATUS",
+        });
     }
   }
 

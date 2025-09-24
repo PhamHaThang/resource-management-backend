@@ -85,9 +85,10 @@ exports.validateCreateUser = (req, res, next) => {
         .status(400)
         .json({ success: false, message: "Role không hợp lệ" });
     if (
-      !studentCode ||
-      typeof studentCode !== "string" ||
-      studentCode.trim().length === 0
+      role === "student" &&
+      (!studentCode ||
+        typeof studentCode !== "string" ||
+        studentCode.trim().length === 0)
     )
       return res
         .status(400)

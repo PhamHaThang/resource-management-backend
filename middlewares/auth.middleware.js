@@ -48,21 +48,27 @@ exports.validateRegister = (req, res, next) => {
   const { name, email, password, role, studentCode } = req.body;
 
   if (!name || typeof name !== "string" || name.trim().length < 3) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Tên phải ít nhất 3 ký tự" });
+    return res.status(400).json({
+      success: false,
+      message: "Tên phải ít nhất 3 ký tự",
+      error: "INVALID_NAME",
+    });
   }
 
   if (!email || !isValidEmail(email)) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Email không hợp lệ" });
+    return res.status(400).json({
+      success: false,
+      message: "Email không hợp lệ",
+      error: "INVALID_EMAIL",
+    });
   }
 
   if (!password || typeof password !== "string" || password.length < 6) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Mật khẩu phải từ 6 ký tự trở lên" });
+    return res.status(400).json({
+      success: false,
+      message: "Mật khẩu phải từ 6 ký tự trở lên",
+      error: "INVALID_PASSWORD",
+    });
   }
   if (role === "student") {
     if (
@@ -70,9 +76,11 @@ exports.validateRegister = (req, res, next) => {
       typeof studentCode !== "string" ||
       studentCode.trim().length === 0
     ) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Mã sinh viên không được để trống" });
+      return res.status(400).json({
+        success: false,
+        message: "Mã sinh viên không được để trống",
+        error: "INVALID_STUDENT_CODE",
+      });
     }
   }
 
@@ -82,15 +90,19 @@ exports.validateLogin = (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !isValidEmail(email)) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Email không hợp lệ" });
+    return res.status(400).json({
+      success: false,
+      message: "Email không hợp lệ",
+      error: "INVALID_EMAIL",
+    });
   }
 
   if (!password || typeof password !== "string" || password.length === 0) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Mật khẩu không được để trống" });
+    return res.status(400).json({
+      success: false,
+      message: "Mật khẩu không được để trống",
+      error: "INVALID_PASSWORD",
+    });
   }
 
   next();
@@ -99,9 +111,11 @@ exports.validateForgotPassword = (req, res, next) => {
   const { email } = req.body;
 
   if (!email || !isValidEmail(email)) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Email không hợp lệ" });
+    return res.status(400).json({
+      success: false,
+      message: "Email không hợp lệ",
+      error: "INVALID_EMAIL",
+    });
   }
 
   next();
@@ -111,9 +125,11 @@ exports.validateResetPassword = (req, res, next) => {
   const { token, newPassword } = req.body;
 
   if (!token || typeof token !== "string" || token.length === 0) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Token không hợp lệ" });
+    return res.status(400).json({
+      success: false,
+      message: "Token không hợp lệ",
+      error: "INVALID_TOKEN",
+    });
   }
 
   if (
@@ -124,6 +140,7 @@ exports.validateResetPassword = (req, res, next) => {
     return res.status(400).json({
       success: false,
       message: "Mật khẩu mới phải từ 6 ký tự trở lên",
+      error: "INVALID_NEW_PASSWORD",
     });
   }
 

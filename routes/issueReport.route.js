@@ -11,21 +11,12 @@ const router = express.Router();
 router.use(authenticateJWT);
 router.post(
   "/",
-  requireRoles("admin", "teacher", "student"),
   multipleUpload("images"),
   issueReportMiddleware.validateCreateIssueReport,
   issueReportController.createIssueReport
 );
-router.get(
-  "/",
-  requireRoles("admin", "teacher", "student"),
-  issueReportController.getAllIssueReports
-);
-router.get(
-  "/:id",
-  requireRoles("admin", "teacher", "student"),
-  issueReportController.getIssueReportDetail
-);
+router.get("/", issueReportController.getAllIssueReports);
+router.get("/:id", issueReportController.getIssueReportDetail);
 router.put(
   "/:id/status",
   requireRoles("admin"),
