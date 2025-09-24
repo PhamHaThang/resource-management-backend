@@ -270,7 +270,9 @@ exports.cancelBookingByUser = async (req, res) => {
         message: "Không tìm thấy booking",
         error: "NOT_FOUND",
       });
-    if (!booking.userId.equals(req.user._id) || req.user.role !== "admin") {
+    const isOwner = booking.userId.equals(req.user._id);
+    const isAdmin = req.user.role === "admin";
+    if (!isOwner || !isAdmin) {
       return res.status(403).json({
         success: false,
         message: "Không đủ quyền hủy booking này",
