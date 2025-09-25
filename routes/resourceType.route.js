@@ -6,9 +6,9 @@ const {
   requireRoles,
 } = require("../middlewares/auth.middleware");
 const resourceTypeMiddleware = require("../middlewares/resourceType.middleware");
+router.use(authenticateJWT);
 router.post(
   "/",
-  authenticateJWT,
   requireRoles("admin"),
   resourceTypeMiddleware.validateCreateResourceType,
   resourceTypeController.createResourceType
@@ -16,14 +16,12 @@ router.post(
 router.get("/", resourceTypeController.getAllResourceTypes);
 router.put(
   "/:id",
-  authenticateJWT,
   requireRoles("admin"),
   resourceTypeMiddleware.validateUpdateResourceType,
   resourceTypeController.updateResourceType
 );
 router.delete(
   "/:id",
-  authenticateJWT,
   requireRoles("admin"),
   resourceTypeController.deleteResourceType
 );
