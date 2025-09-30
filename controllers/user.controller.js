@@ -3,6 +3,7 @@ const User = require("../models/user.model");
 const bcrypt = require("bcryptjs");
 const { getPaginationAndFilter } = require("../utils/pagination");
 const AppError = require("../utils/AppError");
+const { deleteCloudinaryImage } = require("../utils/cloudinary");
 
 // [GET] /api/users
 exports.getAllUsers = asyncHandler(async (req, res) => {
@@ -36,18 +37,26 @@ exports.updateUser = asyncHandler(async (req, res) => {
   const updateData = { ...req.body };
   const removeAvatar = updateData.removeAvatar === "true";
   delete updateData.removeAvatar;
+  const currentUser = await User.findById(req.params.id);
+  if (!currentUser || currentUser.deleted) {
+    throw new AppError(404, "Không tìm thấy người dùng", "NOT_FOUND");
+  }
   if (updateData.password) {
     const salt = await bcrypt.genSalt(10);
     updateData.password = await bcrypt.hash(updateData.password, salt);
   }
+  let avatarToDelete = null;
   if (req.file) {
     updateData.avatar = req.file.path;
+    if (currentUser.avatar) {
+      avatarToDelete = currentUser.avatar;
+    }
   } else if (removeAvatar) {
     updateData.avatar = "";
   }
   if (updateData.email) {
     const existingUser = await User.findOne({
-      _id: { $ne: req.user._id },
+      _id: { $ne: req.params.id },
       email: updateData.email,
     });
     if (existingUser) {
@@ -59,6 +68,9 @@ exports.updateUser = asyncHandler(async (req, res) => {
   }).select("-password");
   if (!user) {
     throw new AppError(404, "Không tìm thấy người dùng", "NOT_FOUND");
+  }
+  if (avatarToDelete) {
+    await deleteCloudinaryImage(avatarToDelete);
   }
   return res.json({
     success: true,
@@ -102,9 +114,10 @@ exports.deleteUser = asyncHandler(async (req, res) => {
   const user = await User.findOneAndUpdate(
     { _id: req.params.id, deleted: false },
     { deleted: true },
-    { new: true }
+    { new: false }
   );
   if (!user) throw new AppError(404, "Không tìm thấy user", "NOT_FOUND");
+
   return res.json({
     success: true,
     message: "Xóa user thành công",
@@ -130,10 +143,21 @@ exports.updateProfile = asyncHandler(async (req, res) => {
   delete updateData.password;
   delete updateData.role;
   delete updateData.status;
+  const currentUser = await User.findById(req.user._id);
+  if (!currentUser || currentUser.deleted) {
+    throw new AppError(404, "Không tìm thấy user", "NOT_FOUND");
+  }
+  let avatarToDelete = null;
   if (req.file) {
     updateData.avatar = req.file.path;
+    if (currentUser.avatar) {
+      avatarToDelete = currentUser.avatar;
+    }
   } else if (removeAvatar) {
     updateData.avatar = "";
+    if (currentUser.avatar) {
+      avatarToDelete = currentUser.avatar;
+    }
   }
   if (updateData.email) {
     const existingUser = await User.findOne({
@@ -148,6 +172,9 @@ exports.updateProfile = asyncHandler(async (req, res) => {
     new: true,
   }).select("-password");
   if (!user) throw new AppError(404, "Không tìm thấy user", "NOT_FOUND");
+  if (avatarToDelete) {
+    await deleteCloudinaryImage(avatarToDelete);
+  }
   return res.json({
     success: true,
     message: "Cập nhật thành công",

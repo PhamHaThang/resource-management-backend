@@ -4,6 +4,7 @@ const QRCode = require("qrcode");
 const { getPaginationAndFilter } = require("../utils/pagination");
 const AppError = require("../utils/AppError");
 const asyncHandler = require("express-async-handler");
+const { deleteCloudinaryImages } = require("../utils/cloudinary");
 // [POST] /api/resources
 exports.createResource = asyncHandler(async (req, res) => {
   const { name, type, description, usageRules, capacity, location, status } =
@@ -81,7 +82,14 @@ exports.getResourceById = asyncHandler(async (req, res) => {
 
 // [PUT] /api/resources/:id
 exports.updateResource = asyncHandler(async (req, res) => {
-  const updateData = req.body;
+  const updateData = { ...req.body };
+  const currentResource = await Resource.findOne({
+    _id: req.params.id,
+    deleted: false,
+  });
+  if (!currentResource) {
+    throw new AppError(404, "Không tìm thấy tài nguyên", "NOT_FOUND");
+  }
   if (updateData.type) {
     const typeExists = await ResourceType.findById(updateData.type);
     if (!typeExists) {
@@ -118,16 +126,22 @@ exports.updateResource = asyncHandler(async (req, res) => {
     typeof updateData.images !== "undefined" ||
     typeof req.body.existingImages !== "undefined"
   ) {
-    updateData.images = [...existingImages, ...uploadedImages];
+    const mergedImages = [...existingImages, ...uploadedImages].filter(Boolean);
+    updateData.images = Array.from(new Set(mergedImages));
   }
 
-  const updatedResource = await Resource.findOneAndUpdate(
-    { _id: req.params.id, deleted: false },
+  const nextImages = updateData.images || currentResource.images || [];
+  updateData.images = nextImages;
+  const removedImages = (currentResource.images || []).filter(
+    (image) => !nextImages.includes(image)
+  );
+  const updatedResource = await Resource.findByIdAndUpdate(
+    currentResource._id,
     updateData,
     { new: true }
   );
-  if (!updatedResource) {
-    throw new AppError(404, "Không tìm thấy tài nguyên", "NOT_FOUND");
+  if (removedImages.length > 0) {
+    await deleteCloudinaryImages(removedImages);
   }
   return res.json({
     success: true,

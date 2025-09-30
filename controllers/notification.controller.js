@@ -3,6 +3,7 @@ const AppError = require("../utils/AppError");
 const asyncHandler = require("express-async-handler");
 // [GET] /api/notifications
 exports.getNotifications = asyncHandler(async (req, res) => {
+  const { isRead } = req.query;
   const userId = req.user._id;
   const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
   const page = Math.max(Number(req.query.page) || 1, 1);
