@@ -88,9 +88,39 @@ exports.updateResource = asyncHandler(async (req, res) => {
       throw new AppError(404, "Loại tài nguyên không tồn tại", "NOT_FOUND");
     }
   }
-  if (req.files && req.files.length > 0) {
-    updateData.images = req.files.map((file) => file.path);
+  let existingImages = [];
+  if (typeof updateData.existingImages !== "undefined") {
+    try {
+      const parsed = JSON.parse(updateData.existingImages);
+      if (Array.isArray(parsed)) {
+        existingImages = parsed.filter(Boolean);
+      } else if (parsed) {
+        existingImages = [parsed];
+      }
+    } catch (error) {
+      if (typeof updateData.existingImages === "string") {
+        existingImages = [updateData.existingImages].filter(Boolean);
+      }
+    }
+  } else if (updateData.images) {
+    existingImages = Array.isArray(updateData.images)
+      ? updateData.images.filter(Boolean)
+      : [updateData.images].filter(Boolean);
   }
+
+  delete updateData.existingImages;
+
+  const uploadedImages =
+    req.files && req.files.length > 0 ? req.files.map((file) => file.path) : [];
+
+  if (
+    uploadedImages.length > 0 ||
+    typeof updateData.images !== "undefined" ||
+    typeof req.body.existingImages !== "undefined"
+  ) {
+    updateData.images = [...existingImages, ...uploadedImages];
+  }
+
   const updatedResource = await Resource.findOneAndUpdate(
     { _id: req.params.id, deleted: false },
     updateData,

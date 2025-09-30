@@ -4,14 +4,16 @@ const asyncHandler = require("express-async-handler");
 // [GET] /api/notifications
 exports.getNotifications = asyncHandler(async (req, res) => {
   const userId = req.user._id;
-  const { page = 1, limit = 10, isRead } = req.query;
+  const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
+  const page = Math.max(Number(req.query.page) || 1, 1);
+  const skip = (page - 1) * limit;
   const filter = { userId };
   if (isRead === "true") filter.isRead = true;
   else if (isRead === "false") filter.isRead = false;
   const notifications = await Notification.find(filter)
     .sort({ createdAt: -1 })
-    .skip((page - 1) * limit)
-    .limit(parseInt(limit));
+    .skip(skip)
+    .limit(limit);
   const total = await Notification.countDocuments(filter);
   return res.json({
     success: true,

@@ -1,5 +1,3 @@
-const e = require("express");
-
 exports.validateCreateIssueReport = (req, res, next) => {
   const { title, description, resourceId } = req.body;
 
@@ -40,15 +38,13 @@ exports.validateCreateIssueReport = (req, res, next) => {
 exports.validateUpdateIssueReportStatus = (req, res, next) => {
   const { status } = req.body;
   if (status) {
-    const validStatuses = ["new", "in_progress", "resolved", "closed"];
+    const validStatuses = ["new", "in_progress", "resolved"];
     if (!validStatuses.includes(status)) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Trạng thái không hợp lệ",
-          error: "INVALID_STATUS",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Trạng thái không hợp lệ",
+        error: "INVALID_STATUS",
+      });
     }
   }
 

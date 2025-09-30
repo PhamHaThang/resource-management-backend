@@ -3,6 +3,7 @@ const { createNotificationForUser } = require("../utils/notification");
 const IssueReport = require("../models/issueReport.model");
 const AppError = require("../utils/AppError");
 const asyncHandler = require("express-async-handler");
+const mongoose = require("mongoose");
 // [POST] /api/issue-reports
 exports.createIssueReport = asyncHandler(async (req, res) => {
   const { resourceId, title, description } = req.body;
@@ -67,9 +68,12 @@ exports.updateIssueStatus = asyncHandler(async (req, res) => {
   );
   if (!report)
     throw new AppError(404, "Không tìm thấy báo cáo sự cố", "NOT_FOUND");
-
+  const userId =
+    report.userId instanceof mongoose.Types.ObjectId
+      ? report.userId
+      : report.userId._id;
   await createNotificationForUser(
-    report.userId._id,
+    userId,
     "Trạng thái báo cáo sự cố thay đổi",
     `Báo cáo sự cố của bạn đã chuyển sang trạng thái: ${status}`,
     "issueReport",

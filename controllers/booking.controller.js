@@ -3,6 +3,7 @@ const { createNotificationForUser } = require("../utils/notification");
 const { getPaginationAndFilter } = require("../utils/pagination");
 const asyncHandler = require("express-async-handler");
 const AppError = require("../utils/AppError");
+const mongoose = require("mongoose");
 // [POST] /api/bookings
 exports.createBooking = asyncHandler(async (req, res) => {
   const { resourceId, startTime, endTime, purpose } = req.body;
@@ -130,7 +131,7 @@ exports.updateBooking = asyncHandler(async (req, res) => {
           endTime: { $gte: new Date(updateData.endTime) },
         },
       ],
-      status: { $in: ["new", "approved"] },
+      status: { $in: ["pending", "approved"] },
     });
 
     if (conflictCount > 0) {
@@ -169,8 +170,12 @@ exports.updateBookingStatus = asyncHandler(async (req, res) => {
   if (!booking) {
     throw new AppError(404, "Không tìm thấy đặt lịch", "NOT_FOUND");
   }
+  const recipientId =
+    booking.userId instanceof mongoose.Types.ObjectId
+      ? booking.userId
+      : booking.userId._id;
   await createNotificationForUser(
-    booking.userId._id,
+    recipientId,
     "Trạng thái booking thay đổi",
     `Booking của bạn đã chuyển sang trạng thái: ${status}`,
     "booking",
@@ -202,11 +207,15 @@ exports.cancelBookingByUser = asyncHandler(async (req, res) => {
 
   const isOwner = booking.userId.equals(req.user._id);
   const isAdmin = req.user.role === "admin";
-  if (!isOwner || !isAdmin) {
+  if (!isOwner && !isAdmin) {
     throw new AppError(403, "Không đủ quyền hủy booking này", "FORBIDDEN");
   }
+  const recipientId =
+    booking.userId instanceof mongoose.Types.ObjectId
+      ? booking.userId
+      : booking.userId._id;
   await createNotificationForUser(
-    booking.userId._id,
+    recipientId,
     "Booking đã được hủy",
     `Booking của bạn đã hủy thành công`,
     "booking",

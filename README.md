@@ -1,126 +1,150 @@
 # Resource Management Backend
 
-Hệ thống Quản lý và Đăng ký Tài nguyên - Backend
-Đây là backend cho dự án Hệ thống Quản lý và Đăng ký Tài nguyên Học viện, được xây dựng bằng Node.js, Express, và MongoDB. Hệ thống cho phép sinh viên và giảng viên xem, tìm kiếm và đăng ký sử dụng các tài nguyên (phòng học, thiết bị), đồng thời cung cấp cho quản trị viên các công cụ để quản lý người dùng, tài nguyên, và xem báo cáo thống kê.
+Backend quản lý và đăng ký tài nguyên cho Học viện, xây dựng trên **Node.js**, **Express**, và **MongoDB**. Hệ thống hỗ trợ sinh viên, giảng viên đặt lịch sử dụng phòng học, thiết bị; quản trị viên quản lý tài nguyên, người dùng và báo cáo.
 
-Mục lục
-Tính năng chính
+---
 
-Công nghệ sử dụng
+## 📌 Mục lục
 
-Hướng dẫn cài đặt
+- [Tính năng](#-tính-năng)
+- [Công nghệ sử dụng](#-công-nghệ-sử-dụng)
+- [Yêu cầu hệ thống](#-yêu-cầu-hệ-thống)
+- [Hướng dẫn cài đặt](#-hướng-dẫn-cài-đặt)
+- [Biến môi trường](#-biến-môi-trường)
+- [Scripts](#-scripts)
+- [Tài liệu API](#-tài-liệu-api)
+- [Cấu trúc thư mục](#-cấu-trúc-thư-mục)
 
-Cấu hình Biến môi trường
+---
 
-Tài liệu API
+## ✅ Tính năng
 
-Cấu trúc thư mục
+### Đối với Quản trị viên
 
-Tính năng chính
-Đối với Quản trị viên (Admin)
-Quản lý Người dùng: Thêm, sửa, xóa, và quản lý trạng thái các tài khoản người dùng.
+- Quản lý người dùng: tạo, cập nhật, vô hiệu hóa tài khoản.
+- Quản lý tài nguyên: tạo loại tài nguyên, điều chỉnh lịch khả dụng.
+- Phê duyệt/ từ chối đăng ký sử dụng tài nguyên.
+- Theo dõi báo cáo sự cố và cập nhật trạng thái xử lý.
+- Dashboard thống kê: tỷ lệ sử dụng, mức độ lỗi, số phiên đặt lịch.
 
-Quản lý Tài nguyên: Quản lý vòng đời của tài nguyên và các loại tài nguyên.
+### Đối với Sinh viên / Giảng viên
 
-Quản lý Đặt lịch: Phê duyệt hoặc từ chối các yêu cầu đặt tài nguyên từ người dùng.
+- Xác thực JWT, đăng ký, đăng nhập, quên mật khẩu.
+- Quản lý tài khoản cá nhân, đổi mật khẩu.
+- Tìm kiếm, lọc tài nguyên và gửi yêu cầu đặt lịch.
+- Báo cáo sự cố kèm hình ảnh.
+- Nhận thông báo về trạng thái đặt lịch, phê duyệt, nhắc lịch.
 
-Quản lý Báo cáo Sự cố: Theo dõi và cập nhật trạng thái các sự cố được báo cáo.
+---
 
-Dashboard Thống kê: Xem các báo cáo trực quan về tình hình sử dụng tài nguyên và các số liệu khác.
+## 🛠 Công nghệ sử dụng
 
-Đối với Người dùng (Student/Teacher)
-Xác thực: Đăng ký, đăng nhập an toàn bằng JWT, quên mật khẩu.
+| Mục           | Công nghệ                                    |
+| ------------- | -------------------------------------------- |
+| Runtime       | Node.js >= 18                                |
+| Framework     | Express.js                                   |
+| Cơ sở dữ liệu | MongoDB + Mongoose                           |
+| Xác thực      | JSON Web Tokens (JWT), Passport (tùy chọn)   |
+| Upload        | Multer + Cloudinary                          |
+| Gửi email     | Nodemailer (cấu hình qua `utils/mailConfig`) |
 
-Quản lý Tài khoản: Xem và cập nhật thông tin cá nhân, đổi mật khẩu.
+---
 
-Xem và Đặt lịch: Tìm kiếm, lọc tài nguyên và gửi yêu cầu đặt lịch sử dụng.
+## 💻 Yêu cầu hệ thống
 
-Báo cáo Sự cố: Gửi báo cáo kèm hình ảnh về các sự cố gặp phải khi sử dụng tài nguyên.
+- Node.js >= 18
+- npm >= 9
+- MongoDB (Atlas hoặc self-hosted)
+- Đã cài đặt `git`
 
-Thông báo: Nhận thông báo về trạng thái đặt lịch và các cập nhật khác.
+---
 
-Công nghệ sử dụng
-Nền tảng: Node.js
+## 🚀 Hướng dẫn cài đặt
 
-Framework: Express.js
-
-Cơ sở dữ liệu: MongoDB với Mongoose ODM
-
-Xác thực: JSON Web Tokens (JWT)
-
-Upload File: Multer và Cloudinary
-
-Gửi Email: Nodemailer
-
-Validation: Middleware tùy chỉnh
-
-Hướng dẫn cài đặt
-Clone repository:
-
-git clone [https://your-repository-url.git](https://your-repository-url.git)
+```bash
+git clone https://github.com/PhamHaThang/resource-management-backend
 cd resource-management-backend
-
-Cài đặt các dependencies:
 
 npm install
 
-Tạo file .env:
-Tạo một file .env ở thư mục gốc và điền các biến môi trường cần thiết. Xem mục Cấu hình Biến môi trường để biết chi tiết.
+cp .env.example .env
+# Chỉnh sửa .env theo [Biến môi trường](#-biến-môi-trường)
 
-Chạy server ở chế độ development:
+npm run dev
+# Server mặc định tại http://localhost:5000
+```
 
+Production build:
+
+```bash
+npm run build
 npm start
+```
 
-Server sẽ chạy tại http://localhost:5000 (hoặc cổng bạn đã cấu hình).
+---
 
-Chạy tests (nếu có):
+## 🔐 Biến môi trường
 
-npm test
-
-Cấu hình Biến môi trường
-Bạn cần tạo một file .env ở thư mục gốc của dự án với các biến sau:
-
+```ini
 # Server
-
 PORT=5000
+NODE_ENV=development
 
-# MongoDB
+# Database
+MONGO_URI=mongodb://localhost:27017/resource-management
 
-MONGO_URI=your_mongodb_connection_string
+# Auth
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=7d
 
-# JSON Web Token
+# Mail (bắt buộc)
+SMTP_USER =
+SMTP_PASS =
+MAIL_FROM =
+MAIL_FROM =
 
-JWT_SECRET=your_jwt_secret_key
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
 
-# Cloudinary (để upload ảnh)
+# Frontend
+FRONTEND_RESET_PASSWORD_URL=https://frontend.example.com/reset-password
+```
 
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
+---
 
-# Nodemailer (để gửi email)
+## 📜 Scripts
 
-SMTP_USER=your_email@gmail.com
-SMTP_PASS=your_gmail_app_password
+| Lệnh          | Mô tả                     |
+| ------------- | ------------------------- |
+| `npm run dev` | Chạy server với nodemon   |
+| `npm start`   | Chạy bản build production |
 
-# Frontend URL (để reset mật khẩu)
+---
 
-FRONTEND_RESET_PASSWORD_URL=[http://your-frontend-domain.com/reset-password](http://your-frontend-domain.com/reset-password)
+---
 
-Tài liệu API
-Chúng tôi cung cấp một bộ sưu tập Postman chi tiết để bạn dễ dàng kiểm thử các endpoint.
+## 📘 Tài liệu API
 
-Vui lòng tham khảo file ResourceManagementAPI.postman_collection.json trong repository (nếu có) để import vào Postman.
+- Postman collection (`docs/ResourceManagement.postman_collection.json`).
 
-Cấu trúc thư mục
-Dự án được tổ chức theo cấu trúc module hóa để dễ dàng bảo trì và mở rộng:
+---
 
+## 🗂 Cấu trúc thư mục
+
+```text
 .
-├── config/ # Cấu hình (database, cloudinary)
-├── controllers/ # Logic xử lý cho các routes
-├── middlewares/ # Các middleware (xác thực, validation, xử lý lỗi)
-├── models/ # Định nghĩa Schema cho MongoDB
-├── routes/ # Định tuyến các API endpoint
-├── utils/ # Các hàm tiện ích (gửi mail, xử lý lỗi)
-├── server.js # File khởi tạo server
+├── config/                 # Cấu hình kết nối DB, cloudinary, rate-limit,...
+├── controllers/            # Controller Express (mỏng, gọi service)
+├── services/               # Business logic
+├── middlewares/            # Auth, upload, validation, error handler
+├── models/                 # Mongoose schema/model
+├── routes/                 # Khai báo routes
+├── utils/                  # Tiện ích (mail, logger, helper)
+├── docs/                   # Tài liệu API, sơ đồ
+├── server.js               # Khởi tạo app/HTTP server
 └── package.json
+```
+
+---

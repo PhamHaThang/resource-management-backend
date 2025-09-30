@@ -34,12 +34,16 @@ exports.getAllUsers = asyncHandler(async (req, res) => {
 // [PUT] /api/users/:id
 exports.updateUser = asyncHandler(async (req, res) => {
   const updateData = { ...req.body };
+  const removeAvatar = updateData.removeAvatar === "true";
+  delete updateData.removeAvatar;
   if (updateData.password) {
     const salt = await bcrypt.genSalt(10);
     updateData.password = await bcrypt.hash(updateData.password, salt);
   }
   if (req.file) {
     updateData.avatar = req.file.path;
+  } else if (removeAvatar) {
+    updateData.avatar = "";
   }
   if (updateData.email) {
     const existingUser = await User.findOne({
@@ -121,11 +125,15 @@ exports.getProfile = asyncHandler(async (req, res) => {
 // [PUT] /api/users/profile
 exports.updateProfile = asyncHandler(async (req, res) => {
   const updateData = { ...req.body };
+  const removeAvatar = updateData.removeAvatar === "true";
+  delete updateData.removeAvatar;
   delete updateData.password;
   delete updateData.role;
   delete updateData.status;
   if (req.file) {
     updateData.avatar = req.file.path;
+  } else if (removeAvatar) {
+    updateData.avatar = "";
   }
   if (updateData.email) {
     const existingUser = await User.findOne({
