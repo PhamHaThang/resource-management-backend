@@ -48,7 +48,7 @@ exports.getAllResources = asyncHandler(async (req, res) => {
   filter.deleted = false;
   const total = await Resource.countDocuments(filter);
   const resources = await Resource.find(filter)
-    .populate("type", "name -_id")
+    .populate("type", "name")
     .skip(skip)
     .limit(limit)
     .sort({ createdAt: -1 });
@@ -69,7 +69,7 @@ exports.getResourceById = asyncHandler(async (req, res) => {
   const resource = await Resource.findOne({
     _id: req.params.id,
     deleted: false,
-  }).populate("type", "name -_id");
+  }).populate("type", "name");
   if (!resource) {
     throw new AppError(404, "Không tìm thấy tài nguyên", "NOT_FOUND");
   }
@@ -132,14 +132,17 @@ exports.updateResource = asyncHandler(async (req, res) => {
 
   const nextImages = updateData.images || currentResource.images || [];
   updateData.images = nextImages;
+
   const removedImages = (currentResource.images || []).filter(
     (image) => !nextImages.includes(image)
   );
+
   const updatedResource = await Resource.findByIdAndUpdate(
     currentResource._id,
     updateData,
     { new: true }
   );
+
   if (removedImages.length > 0) {
     await deleteCloudinaryImages(removedImages);
   }
@@ -159,6 +162,9 @@ exports.deleteResource = asyncHandler(async (req, res) => {
   );
   if (!deletedResource) {
     throw new AppError(404, "Không tìm thấy tài nguyên", "NOT_FOUND");
+  }
+  if (Array.isArray(deletedResource.images) && deletedResource.images.length) {
+    await deleteCloudinaryImages(deletedResource.images);
   }
   return res.json({
     success: true,

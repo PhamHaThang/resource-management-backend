@@ -8,6 +8,7 @@ const {
 const bookingMiddleware = require("../middlewares/booking.middleware");
 router.use(authenticateJWT);
 // USER
+router.get("/calendar/public", bookingController.getCalendarPublic);
 router.get("/", bookingController.getAllBookings);
 router.get("/:id", bookingController.getBookingDetail);
 router.post(

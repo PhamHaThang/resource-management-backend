@@ -1,14 +1,48 @@
 const Booking = require("../models/booking.model");
+const Resource = require("../models/resource.model");
 const { createNotificationForUser } = require("../utils/notification");
 const { getPaginationAndFilter } = require("../utils/pagination");
 const asyncHandler = require("express-async-handler");
 const AppError = require("../utils/AppError");
 const mongoose = require("mongoose");
-const Resource = require("../models/resource.model");
+
+const buildTimeConditions = (startDate, endDate) => {
+  const conditions = [];
+
+  if (startDate) {
+    const start = new Date(startDate);
+    if (!Number.isNaN(start.getTime())) {
+      conditions.push({ endTime: { $gte: start } });
+    }
+  }
+
+  if (endDate) {
+    const end = new Date(endDate);
+    if (!Number.isNaN(end.getTime())) {
+      conditions.push({ startTime: { $lte: end } });
+    }
+  }
+
+  return conditions;
+};
+
+const isSameDay = (start, end) =>
+  start.getFullYear() === end.getFullYear() &&
+  start.getMonth() === end.getMonth() &&
+  start.getDate() === end.getDate();
 // [POST] /api/bookings
 exports.createBooking = asyncHandler(async (req, res) => {
   const { resourceId, startTime, endTime, purpose } = req.body;
   const userId = req.user._id;
+
+  if (!resourceId || !startTime || !endTime) {
+    throw new AppError(400, "Thiếu thông tin đặt lịch", "INVALID_PAYLOAD");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(resourceId)) {
+    throw new AppError(400, "Tài nguyên không hợp lệ", "INVALID_RESOURCE_ID");
+  }
+
   const resource = await Resource.findOne({
     _id: resourceId,
     deleted: false,
@@ -19,6 +53,36 @@ exports.createBooking = asyncHandler(async (req, res) => {
 
   const start = new Date(startTime);
   const end = new Date(endTime);
+  const now = new Date();
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    throw new AppError(400, "Thời gian không hợp lệ", "INVALID_TIME");
+  }
+
+  if (end <= start) {
+    throw new AppError(
+      400,
+      "Thời gian kết thúc phải lớn hơn thời gian bắt đầu",
+      "INVALID_TIME_RANGE"
+    );
+  }
+
+  if (!isSameDay(start, end)) {
+    throw new AppError(
+      400,
+      "Thời gian đặt phải trong cùng một ngày",
+      "INVALID_TIME_RANGE"
+    );
+  }
+
+  if (start < now) {
+    throw new AppError(
+      400,
+      "Không thể đặt lịch trong quá khứ",
+      "INVALID_TIME_RANGE"
+    );
+  }
+
   const overlappingBooking = await Booking.findOne({
     resourceId,
     status: { $in: ["pending", "approved"] },
@@ -83,11 +147,20 @@ exports.getAllBookings = asyncHandler(async (req, res) => {
     req.query,
     allowedFilters
   );
+
+  const queryFilter = { ...filter };
   if (req.user.role === "student") {
-    filter.userId = req.user._id;
+    queryFilter.userId = req.user._id;
   }
-  const total = await Booking.countDocuments(filter);
-  const bookings = await Booking.find(filter)
+
+  const { startDate, endDate } = req.query;
+  const timeConditions = buildTimeConditions(startDate, endDate);
+  if (timeConditions.length > 0) {
+    queryFilter.$and = [...(queryFilter.$and || []), ...timeConditions];
+  }
+
+  const total = await Booking.countDocuments(queryFilter);
+  const bookings = await Booking.find(queryFilter)
     .populate({
       path: "resourceId",
       populate: { path: "type", select: "name -_id" },
@@ -108,6 +181,45 @@ exports.getAllBookings = asyncHandler(async (req, res) => {
   });
 });
 
+// [GET] /api/bookings/calendar/public
+exports.getCalendarPublic = asyncHandler(async (req, res) => {
+  const { startDate, endDate, status } = req.query;
+
+  if (!startDate || !endDate) {
+    throw new AppError(400, "Cần startDate và endDate", "INVALID_TIME_RANGE");
+  }
+
+  const timeConditions = buildTimeConditions(startDate, endDate);
+
+  if (timeConditions.length === 0) {
+    throw new AppError(
+      400,
+      "Khoảng thời gian không hợp lệ",
+      "INVALID_TIME_RANGE"
+    );
+  }
+
+  const queryFilter = {
+    status: status || "approved",
+    $and: timeConditions,
+  };
+
+  const bookings = await Booking.find(queryFilter)
+    .select("resourceId startTime endTime status")
+    .populate({
+      path: "resourceId",
+      select: "name type",
+      populate: { path: "type", select: "name" },
+    })
+    .sort({ startTime: 1 });
+
+  return res.json({
+    success: true,
+    message: "Lấy lịch đặt thành công",
+    data: { bookings },
+  });
+});
+
 // [PUT] /api/bookings/:id
 exports.updateBooking = asyncHandler(async (req, res) => {
   const updateData = { ...req.body };
@@ -118,41 +230,73 @@ exports.updateBooking = asyncHandler(async (req, res) => {
   if (!currentBooking) {
     throw new AppError(404, "Không tìm thấy booking", "NOT_FOUND");
   }
-  const start = new Date(updateData.startTime);
-  const end = new Date(updateData.endTime);
-  const conflictCount = await Booking.countDocuments({
-    _id: { $ne: id },
-    resourceId: currentBooking.resourceId,
-    $or: [
-      {
-        startTime: {
-          $lt: end,
-          $gte: start,
-        },
-      },
-      {
-        endTime: {
-          $gt: start,
-          $lte: end,
-        },
-      },
-      {
-        startTime: { $lte: start },
-        endTime: { $gte: end },
-      },
-    ],
-    status: { $in: ["pending", "approved"] },
-  });
 
-  if (conflictCount > 0) {
+  const hasStart = typeof updateData.startTime !== "undefined";
+  const hasEnd = typeof updateData.endTime !== "undefined";
+
+  if (hasStart !== hasEnd) {
     throw new AppError(
       400,
-      "Thời gian đặt booking bị xung đột với booking khác",
-      "TIME_CONFLICT"
+      "Cần cung cấp cả thời gian bắt đầu và kết thúc",
+      "INVALID_TIME_RANGE"
     );
   }
-  updateData.startTime = start;
-  updateData.endTime = end;
+
+  if (hasStart && hasEnd) {
+    const start = new Date(updateData.startTime);
+    const end = new Date(updateData.endTime);
+    const now = new Date();
+
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      throw new AppError(400, "Thời gian không hợp lệ", "INVALID_TIME");
+    }
+
+    if (end <= start) {
+      throw new AppError(
+        400,
+        "Thời gian kết thúc phải lớn hơn thời gian bắt đầu",
+        "INVALID_TIME_RANGE"
+      );
+    }
+
+    if (!isSameDay(start, end)) {
+      throw new AppError(
+        400,
+        "Thời gian đặt phải trong cùng một ngày",
+        "INVALID_TIME_RANGE"
+      );
+    }
+
+    if (start < now) {
+      throw new AppError(
+        400,
+        "Không thể đặt lịch trong quá khứ",
+        "INVALID_TIME_RANGE"
+      );
+    }
+
+    const conflictCount = await Booking.countDocuments({
+      _id: { $ne: id },
+      resourceId: currentBooking.resourceId,
+      $or: [
+        { startTime: { $lt: end, $gte: start } },
+        { endTime: { $gt: start, $lte: end } },
+        { startTime: { $lte: start }, endTime: { $gte: end } },
+      ],
+      status: { $in: ["pending", "approved"] },
+    });
+
+    if (conflictCount > 0) {
+      throw new AppError(
+        400,
+        "Thời gian đặt booking bị xung đột với booking khác",
+        "TIME_CONFLICT"
+      );
+    }
+    updateData.startTime = start;
+    updateData.endTime = end;
+  }
+
   const booking = await Booking.findByIdAndUpdate(id, updateData, {
     new: true,
   });
@@ -169,17 +313,28 @@ exports.updateBooking = asyncHandler(async (req, res) => {
 exports.updateBookingStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { status, rejectReason } = req.body;
-
   const booking = await Booking.findById(id);
   if (!booking) {
     throw new AppError(404, "Không tìm thấy đặt lịch", "NOT_FOUND");
   }
+
   if (status === booking.status) {
     return res.json({
       success: true,
       message: "Cập nhật trạng thái thành công",
       data: booking,
     });
+  }
+
+  if (
+    status === "approved" &&
+    ["cancelled", "rejected"].includes(booking.status)
+  ) {
+    throw new AppError(
+      400,
+      "Booking đã bị huỷ hoặc từ chối nên không thể duyệt lại",
+      "INVALID_STATUS_TRANSITION"
+    );
   }
 
   if (status === "approved") {
@@ -208,6 +363,7 @@ exports.updateBookingStatus = asyncHandler(async (req, res) => {
       );
     }
   }
+
   const updateData = { status };
   if (status === "rejected" && rejectReason) {
     updateData.rejectReason = rejectReason;
